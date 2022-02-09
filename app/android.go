@@ -55,12 +55,12 @@ import (
 	"golang.org/x/mobile/app/internal/callfn"
 	"golang.org/x/mobile/event/key"
 	"golang.org/x/mobile/event/lifecycle"
-	"golang.org/x/mobile/event/paint"
 	"golang.org/x/mobile/event/size"
 	"golang.org/x/mobile/event/touch"
-	"golang.org/x/mobile/geom"
 	"golang.org/x/mobile/internal/mobileinit"
 )
+
+var Window *C.ANativeWindow
 
 // RunOnJVM runs fn on a new goroutine locked to an OS thread with a JNIEnv.
 //
@@ -86,7 +86,6 @@ func callMain(mainPC uintptr) {
 		os.Setenv(name, C.GoString(C.getenv(n)))
 		C.free(unsafe.Pointer(n))
 	}
-
 	// Set timezone.
 	//
 	// Note that Android zoneinfo is stored in /system/usr/share/zoneinfo,
@@ -144,6 +143,12 @@ func onWindowFocusChanged(activity *C.ANativeActivity, hasFocus C.int) {
 
 //export onNativeWindowCreated
 func onNativeWindowCreated(activity *C.ANativeActivity, window *C.ANativeWindow) {
+	Window = window
+	for i := 0; i < 10; i++ {
+		log.Println("Can we see this", i)
+		log.Println(window)
+		log.Printf("%p\n", window)
+	}
 }
 
 //export onNativeWindowRedrawNeeded
@@ -159,6 +164,7 @@ func onNativeWindowRedrawNeeded(activity *C.ANativeActivity, window *C.ANativeWi
 
 //export onNativeWindowDestroyed
 func onNativeWindowDestroyed(activity *C.ANativeActivity, window *C.ANativeWindow) {
+	Window = nil
 	windowDestroyed <- window
 }
 
@@ -291,34 +297,42 @@ func mainUI(vm, jniEnv, ctx uintptr) error {
 		close(donec)
 	}()
 
-	var pixelsPerPt float32
-	var orientation size.Orientation
+	//	var pixelsPerPt float32
+	//var orientation size.Orientation
 
 	for {
 		select {
 		case <-donec:
 			return nil
 		case cfg := <-windowConfigChange:
-			pixelsPerPt = cfg.pixelsPerPt
-			orientation = cfg.orientation
+			log.Println("Window config change")
+			log.Println(cfg)
+			//pixelsPerPt = cfg.pixelsPerPt
+			//orientation = cfg.orientation
 		case w := <-windowRedrawNeeded:
-			if C.surface == nil {
-				if errStr := C.createEGLSurface(w); errStr != nil {
-					return fmt.Errorf("%s (%s)", C.GoString(errStr), eglGetError())
+			for i := 0; i < 10; i++ {
+				log.Println("Window redraw needed?", i)
+				log.Printf("%p", w)
+			}
+			/*
+				if C.surface == nil {
+					if errStr := C.createEGLSurface(w); errStr != nil {
+						return fmt.Errorf("%s (%s)", C.GoString(errStr), eglGetError())
+					}
 				}
-			}
-			theApp.sendLifecycle(lifecycle.StageFocused)
-			widthPx := int(C.ANativeWindow_getWidth(w))
-			heightPx := int(C.ANativeWindow_getHeight(w))
-			theApp.eventsIn <- size.Event{
-				WidthPx:     widthPx,
-				HeightPx:    heightPx,
-				WidthPt:     geom.Pt(float32(widthPx) / pixelsPerPt),
-				HeightPt:    geom.Pt(float32(heightPx) / pixelsPerPt),
-				PixelsPerPt: pixelsPerPt,
-				Orientation: orientation,
-			}
-			theApp.eventsIn <- paint.Event{External: true}
+				theApp.sendLifecycle(lifecycle.StageFocused)
+				widthPx := int(C.ANativeWindow_getWidth(w))
+				heightPx := int(C.ANativeWindow_getHeight(w))
+				theApp.eventsIn <- size.Event{
+					WidthPx:     widthPx,
+					HeightPx:    heightPx,
+					WidthPt:     geom.Pt(float32(widthPx) / pixelsPerPt),
+					HeightPt:    geom.Pt(float32(heightPx) / pixelsPerPt),
+					PixelsPerPt: pixelsPerPt,
+					Orientation: orientation,
+				}
+				theApp.eventsIn <- paint.Event{External: true}
+			*/
 		case <-windowDestroyed:
 			if C.surface != nil {
 				if errStr := C.destroyEGLSurface(); errStr != nil {
