@@ -104,10 +104,16 @@ func callMain(mainPC uintptr) {
 
 //export onStart
 func onStart(activity *C.ANativeActivity) {
+	for i := 0; i < 10; i++ {
+		log.Println("On Start", i)
+	}
 }
 
 //export onResume
 func onResume(activity *C.ANativeActivity) {
+	for i := 0; i < 10; i++ {
+		log.Println("On resume", i)
+	}
 }
 
 //export onSaveInstanceState
@@ -117,10 +123,16 @@ func onSaveInstanceState(activity *C.ANativeActivity, outSize *C.size_t) unsafe.
 
 //export onPause
 func onPause(activity *C.ANativeActivity) {
+	for i := 0; i < 10; i++ {
+		log.Println("On pause", i)
+	}
 }
 
 //export onStop
 func onStop(activity *C.ANativeActivity) {
+	for i := 0; i < 10; i++ {
+		log.Println("On Stop", i)
+	}
 }
 
 //export onCreate
@@ -145,7 +157,8 @@ func onWindowFocusChanged(activity *C.ANativeActivity, hasFocus C.int) {
 func onNativeWindowCreated(activity *C.ANativeActivity, window *C.ANativeWindow) {
 	Window = window
 	for i := 0; i < 10; i++ {
-		log.Println("Can we see this", i)
+		log.Println(C.ANativeWindow_getHeight(Window))
+		log.Println("On Native Window creation", i)
 		log.Println(window)
 		log.Printf("%p\n", window)
 	}
@@ -153,6 +166,11 @@ func onNativeWindowCreated(activity *C.ANativeActivity, window *C.ANativeWindow)
 
 //export onNativeWindowRedrawNeeded
 func onNativeWindowRedrawNeeded(activity *C.ANativeActivity, window *C.ANativeWindow) {
+	for i := 0; i < 10; i++ {
+		log.Println("onNativeWindowRedraw needed", i)
+		log.Println("%p\n")
+	}
+	Window = window
 	// Called on orientation change and window resize.
 	// Send a request for redraw, and block this function
 	// until a complete draw and buffer swap is completed.
@@ -305,8 +323,10 @@ func mainUI(vm, jniEnv, ctx uintptr) error {
 		case <-donec:
 			return nil
 		case cfg := <-windowConfigChange:
-			log.Println("Window config change")
-			log.Println(cfg)
+			for i := 0; i < 10; i++ {
+				log.Println("Window config change", i)
+				log.Println(cfg)
+			}
 			//pixelsPerPt = cfg.pixelsPerPt
 			//orientation = cfg.orientation
 		case w := <-windowRedrawNeeded:
@@ -334,6 +354,10 @@ func mainUI(vm, jniEnv, ctx uintptr) error {
 				theApp.eventsIn <- paint.Event{External: true}
 			*/
 		case <-windowDestroyed:
+			for i := 0; i < 100; i++ {
+				log.Println("Window destoryed", i)
+			}
+
 			if C.surface != nil {
 				if errStr := C.destroyEGLSurface(); errStr != nil {
 					return fmt.Errorf("%s (%s)", C.GoString(errStr), eglGetError())
