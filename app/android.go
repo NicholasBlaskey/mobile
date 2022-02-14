@@ -143,6 +143,7 @@ func onCreate(activity *C.ANativeActivity) {
 	// NativeActivity calls these callbacks sequentially, so configuration
 	// will be set before <-windowRedrawNeeded is processed.
 	windowConfigChange <- windowConfigRead(activity)
+	theApp.sendLifecycle(lifecycle.StageFocused) // Not correct but its fine for now?
 }
 
 //export onDestroy
@@ -304,6 +305,12 @@ func main(f func(App)) {
 	}
 }
 
+func OurDoWork() {
+	log.Println("Called our do work!")
+	theApp.worker.DoWork()
+	log.Println("Called our do work!")
+}
+
 var mainUserFn func(App)
 
 func mainUI(vm, jniEnv, ctx uintptr) error {
@@ -340,7 +347,9 @@ func mainUI(vm, jniEnv, ctx uintptr) error {
 						return fmt.Errorf("%s (%s)", C.GoString(errStr), eglGetError())
 					}
 				}
-				theApp.sendLifecycle(lifecycle.StageFocused)
+			*/
+			theApp.sendLifecycle(lifecycle.StageFocused)
+			/*
 				widthPx := int(C.ANativeWindow_getWidth(w))
 				heightPx := int(C.ANativeWindow_getHeight(w))
 				theApp.eventsIn <- size.Event{
@@ -366,7 +375,9 @@ func mainUI(vm, jniEnv, ctx uintptr) error {
 			C.surface = nil
 			theApp.sendLifecycle(lifecycle.StageAlive)
 		case <-workAvailable:
-			theApp.worker.DoWork()
+			//log.Println("DOING WORK????")
+			//theApp.worker.DoWork()
+			//log.Println("Done with work?")
 		case <-theApp.publish:
 			// TODO: compare a generation number to redrawGen for stale paints?
 			if C.surface != nil {
