@@ -8,7 +8,10 @@
 #include <stdlib.h>
 #include "_cgo_export.h"
 #include "work.h"
+#include <GLES3/gl3.h> // install on Ubuntu with: sudo apt-get install libegl1-mesa-dev libgles2-mesa-
 
+
+/*
 #if defined(GL_ES_VERSION_3_0) && GL_ES_VERSION_3_0
 #else
 #include <stdio.h>
@@ -35,6 +38,7 @@ static void glBindVertexArray(GLuint array) { gles3missing(); }
 static void glGenVertexArrays(GLsizei n, GLuint *arrays) { gles3missing(); }
 static void glDeleteVertexArrays(GLsizei n, const GLuint *arrays) { gles3missing(); }
 #endif
+*/
 
 uintptr_t processFn(struct fnargs* args, char* parg) {
 	uintptr_t ret = 0;

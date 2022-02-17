@@ -12,6 +12,7 @@ package gl
 #cgo darwin,!ios  LDFLAGS: -framework OpenGL
 #cgo linux        LDFLAGS: -lGLESv2
 #cgo openbsd      LDFLAGS: -L/usr/X11R6/lib/ -lGLESv2
+#cgo android      LDFLAGS: -lGLESv3
 
 #cgo android      CFLAGS: -Dos_android
 #cgo ios          CFLAGS: -Dos_ios
